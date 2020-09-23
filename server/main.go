@@ -90,7 +90,7 @@ func (s *Server) DataSend(stream proto.Arise_DataSendServer) error {
 
 func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_DataRecieveServer) error {
   defer delete(contents,request.Code)
-  L:
+  Recieve:
   for {
     select {
     case content := <-contents[request.Code]:
@@ -98,7 +98,7 @@ func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_D
         return err
       }
     case <- done[request.Code]:
-      break L
+      break Recieve
     }
   }
   return nil
