@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package arise;
+
+option go_package=".;proto";
+
+message SenderRequest {
+  string name = 1;
+  string hash = 2;
+}
+
+message RecieverRequest {
+  string code = 1;
+}
+
+
+message SenderResponse {
+  string code = 1;
+}
+
+message RecieverResponse {
+  string name =1;
+  string hash =2;
+}
+
+message SendResponse {
+  string text = 1;
+}
+
+message Empty {
+
+}
+
+message Chunk {
+  bytes content = 1;
+  string code = 2;
+}
+
+message RecieveResponse {
+  bytes content = 1;
+}
+
+service Arise {
+  rpc Sender(SenderRequest) returns (SenderResponse);
+  rpc Reciever(RecieverRequest) returns (RecieverResponse);
+  rpc DataSend(stream Chunk) returns (SendResponse);
+  rpc DataRecieve(RecieverRequest) returns (stream RecieveResponse);
+}
