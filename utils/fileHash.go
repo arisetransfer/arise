@@ -1,6 +1,7 @@
 package utils
 
 import (
+  "fmt"
   "crypto/sha256"
   "io"
   "os"
@@ -9,6 +10,7 @@ import (
 )
 
 func FileHash(name string) (string) {
+  fmt.Println("Calculating sha256 Hash")
   f, err := os.Open(name)
 	if err != nil {
 		log.Println("File Not Found!")
