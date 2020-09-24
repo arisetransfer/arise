@@ -61,7 +61,7 @@ func (s *Server) Sender(ctx context.Context, request *proto.SenderRequest) (*pro
 func (s *Server) Reciever(ctx context.Context, request *proto.RecieverRequest) (*proto.RecieverResponse, error) {
 
   if _, ok := connections[request.Code]; ok {
-    defer delete(connections, request.Code);
+    defer delete(connections, request.Code)
 		return &proto.RecieverResponse{Name: connections[request.Code].Name, Hash: connections[request.Code].Hash}, nil
 	}
 	return &proto.RecieverResponse{Name: "", Hash: ""}, errors.New("The Code Is Invalid")
@@ -77,10 +77,12 @@ func (s *Server) DataSend(stream proto.Arise_DataSendServer) error {
     }
     if err == io.EOF {
       done[code]<-true
-      return stream.SendAndClose(&proto.SendResponse{Text:"Data Recieved To Server!"})
+      return stream.SendAndClose(&proto.SendResponse{Text:"Data Sent Successfully!"})
     }
     if err != nil {
       log.Println("Error : ",err)
+			done[code]<-true
+			return stream.SendAndClose(&proto.SendResponse{Text:"Data Not Recieved!"})
     }
     contents[data.Code]<-data.Content
   }
