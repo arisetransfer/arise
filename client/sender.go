@@ -1,17 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"io"
-	"bufio"
-	"encoding/hex"
-	"crypto/sha256"
 
+	"github.com/cheggaaa/pb/v3"
 	"github.com/iamstefin/arise-grpc/proto"
 	"google.golang.org/grpc"
+	"github.com/iamstefin/arise-grpc/utils"
 )
 
 func main() {
@@ -22,24 +22,14 @@ func main() {
 	}
 	defer conn.Close()
 	client := proto.NewAriseClient(conn)
-	file, err := os.Open("./"+os.Args[1])
+	file, err := os.Open(os.Args[1])
 	if err != nil {
 		log.Println("File Not Found!")
 		return
 	}
 	defer file.Close()
-	f, err := os.Open("./"+os.Args[1])
-	if err != nil {
-		log.Println("File Not Found!")
-		return
-	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		log.Fatal(err)
-	}
-	hash := hex.EncodeToString(h.Sum(nil))
-	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: string(os.Args[1]), Hash: hash})
+	fname, _ := os.Stat(os.Args[1])
+	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(os.Args[1])})
 	if err != nil {
 		log.Fatalf("Error:- ", err)
 		return
@@ -50,6 +40,8 @@ func main() {
 		log.Printf("Error :%v", err)
 		return
 	}
+	count := int(fname.Size()/1024) + 1
+	bar := pb.StartNew(count)
 	buf := make([]byte, 1024)
 	reader := bufio.NewReader(file)
 	for {
@@ -61,9 +53,10 @@ func main() {
 			log.Println("Error: ", err)
 			return
 		}
-		if err := stream.Send(&proto.Chunk{Code:code.Code,Content:[]byte(buf[0:n])}); err != nil {
-			log.Fatalf("%v",err)
+		if err := stream.Send(&proto.Chunk{Code: code.Code, Content: []byte(buf[0:n])}); err != nil {
+			log.Fatalf("%v", err)
 		}
+		bar.Increment()
 	}
 	reply, err := stream.CloseAndRecv()
 	if err != nil {

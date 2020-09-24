@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
   "io"
 
 	"github.com/iamstefin/arise-grpc/proto"
-	"github.com/sethvargo/go-diceware/diceware"
+	"github.com/iamstefin/arise-grpc/utils"
 	"google.golang.org/grpc"
 )
 
@@ -46,7 +45,7 @@ func main() {
 func (s *Server) Sender(ctx context.Context, request *proto.SenderRequest) (*proto.SenderResponse, error) {
 
 	for {
-		code := dice(4)
+		code := utils.Dice(4)
 		if _, ok := connections[code]; ok {
 		} else {
 			connections[code] = *request
@@ -102,13 +101,4 @@ func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_D
     }
   }
   return nil
-}
-
-func dice(i int) string {
-	list, err := diceware.Generate(i)
-	if err != nil {
-		log.Fatal(err)
-	}
-	code := strings.Join(list, "-")
-	return code
 }

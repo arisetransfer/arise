@@ -3,6 +3,7 @@ module github.com/iamstefin/arise-grpc
 go 1.14
 
 require (
+	github.com/cheggaaa/pb/v3 v3.0.5 // indirect
 	github.com/golang/protobuf v1.4.2
 	github.com/sethvargo/go-diceware v0.2.0
 	google.golang.org/grpc v1.33.0-dev
