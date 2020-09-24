@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/cheggaaa/pb/v3"
 	"github.com/iamstefin/arise-grpc/proto"
 	"google.golang.org/grpc"
 	"github.com/iamstefin/arise-grpc/utils"
@@ -40,8 +39,6 @@ func main() {
 		log.Printf("Error :%v", err)
 		return
 	}
-	count := int(fname.Size()/1024) + 1
-	bar := pb.StartNew(count)
 	buf := make([]byte, 1024)
 	reader := bufio.NewReader(file)
 	for {
@@ -56,7 +53,6 @@ func main() {
 		if err := stream.Send(&proto.Chunk{Code: code.Code, Content: []byte(buf[0:n])}); err != nil {
 			log.Fatalf("%v", err)
 		}
-		bar.Increment()
 	}
 	reply, err := stream.CloseAndRecv()
 	if err != nil {
