@@ -8,8 +8,8 @@ import (
 	"net"
   "io"
 
-	"github.com/iamstefin/arise-grpc/proto"
-	"github.com/iamstefin/arise-grpc/utils"
+	"github.com/arisetransfer/arise/proto"
+	"github.com/arisetransfer/arise/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 )
@@ -69,7 +69,6 @@ func (s *Server) Sender(ctx context.Context, request *proto.SenderRequest) (*pro
 func (s *Server) Reciever(ctx context.Context, request *proto.RecieverRequest) (*proto.RecieverResponse, error) {
 
   if _, ok := connections[request.Code]; ok {
-    defer delete(connections, request.Code)
 		recieverIp,_ := peer.FromContext(ctx)
 		rip[request.Code] = proto.RecieverInfo{Ip:recieverIp.Addr.String()}
 		log.Println("Sending to ",recieverIp.Addr.String())
@@ -102,6 +101,9 @@ func (s *Server) DataSend(stream proto.Arise_DataSendServer) error {
 
 func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_DataRecieveServer) error {
   defer delete(contents,request.Code)
+	defer delete(rip,request.Code)
+	defer delete(sip,request.Code)
+	defer delete(connections, request.Code)
   Recieve:
   for {
     select {

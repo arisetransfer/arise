@@ -8,9 +8,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/iamstefin/arise-grpc/proto"
+	"github.com/arisetransfer/arise/proto"
 	"google.golang.org/grpc"
-	"github.com/iamstefin/arise-grpc/utils"
+	"github.com/arisetransfer/arise/utils"
 )
 
 func main() {
