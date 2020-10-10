@@ -34,6 +34,11 @@ func main() {
 		return
 	}
 	fmt.Println("Code: ", code.Code)
+	recieverInfo,err := client.GetRecieverInfo(context.Background(),&proto.Code{Code:code.Code})
+	if err != nil {
+		log.Printf("Errror : %v", err)
+	}
+	fmt.Println("Sending Data to ",recieverInfo.Ip)
 	stream, err := client.DataSend(context.Background())
 	if err != nil {
 		log.Printf("Error :%v", err)

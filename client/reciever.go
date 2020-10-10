@@ -27,6 +27,11 @@ func main() {
 		return
 	}
 	fmt.Println("FileName: ", code.Name, " Hash: ", code.Hash)
+	senderInfo,err := client.GetSenderInfo(context.Background(),&proto.Code{Code:os.Args[1]})
+	if err != nil {
+		log.Printf("Errror : %v", err)
+	}
+	fmt.Println("Receiving Data from ",senderInfo.Ip)
 	recv := &proto.RecieverRequest{Code: os.Args[1]}
 	stream, err := client.DataRecieve(context.Background(), recv)
 	if err != nil {

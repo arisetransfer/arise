@@ -11,6 +11,7 @@ import (
 	"github.com/iamstefin/arise-grpc/proto"
 	"github.com/iamstefin/arise-grpc/utils"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 )
 
 type Server struct{}
@@ -19,6 +20,8 @@ var (
 	connections = make(map[string]proto.SenderRequest)
   contents = make(map[string](chan []byte))
   done = make(map[string]chan bool)
+	rip = make(map[string]proto.RecieverInfo)
+	sip = make(map[string]proto.SenderInfo)
 )
 
 func main() {
@@ -36,6 +39,8 @@ func main() {
 		Reciever: server.Reciever,
 		DataSend: server.DataSend,
 		DataRecieve: server.DataRecieve,
+		GetRecieverInfo: server.GetRecieverInfo,
+		GetSenderInfo: server.GetSenderInfo,
 	})
 
 	fmt.Println("gRPC Server Started")
@@ -51,6 +56,9 @@ func (s *Server) Sender(ctx context.Context, request *proto.SenderRequest) (*pro
 			connections[code] = *request
       contents[code] = make(chan []byte)
       done[code] = make(chan bool, 1)
+			senderIp,_ := peer.FromContext(ctx)
+			sip[code] = proto.SenderInfo{Ip:senderIp.Addr.String()}
+			log.Println("Recieving from ",senderIp.Addr.String())
 			return &proto.SenderResponse{Code: code}, nil
 		}
 	}
@@ -62,6 +70,9 @@ func (s *Server) Reciever(ctx context.Context, request *proto.RecieverRequest) (
 
   if _, ok := connections[request.Code]; ok {
     defer delete(connections, request.Code)
+		recieverIp,_ := peer.FromContext(ctx)
+		rip[request.Code] = proto.RecieverInfo{Ip:recieverIp.Addr.String()}
+		log.Println("Sending to ",recieverIp.Addr.String())
 		return &proto.RecieverResponse{Name: connections[request.Code].Name, Hash: connections[request.Code].Hash}, nil
 	}
 	return &proto.RecieverResponse{Name: "", Hash: ""}, errors.New("The Code Is Invalid")
@@ -103,4 +114,20 @@ func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_D
     }
   }
   return nil
+}
+
+func (s *Server) GetRecieverInfo(ctx context.Context,request *proto.Code) (*proto.RecieverInfo,error) {
+	for {
+		if(rip[request.Code].Ip!=""){
+			return &proto.RecieverInfo{Ip:rip[request.Code].Ip},nil
+		}
+	}
+}
+
+func (s *Server) GetSenderInfo(ctx context.Context,request *proto.Code) (*proto.SenderInfo,error) {
+	for {
+		if(sip[request.Code].Ip!=""){
+			return &proto.SenderInfo{Ip:sip[request.Code].Ip},nil
+		}
+	}
 }
