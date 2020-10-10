@@ -21,6 +21,8 @@ type AriseClient interface {
 	Reciever(ctx context.Context, in *RecieverRequest, opts ...grpc.CallOption) (*RecieverResponse, error)
 	DataSend(ctx context.Context, opts ...grpc.CallOption) (Arise_DataSendClient, error)
 	DataRecieve(ctx context.Context, in *RecieverRequest, opts ...grpc.CallOption) (Arise_DataRecieveClient, error)
+	GetRecieverInfo(ctx context.Context, in *Code, opts ...grpc.CallOption) (*RecieverInfo, error)
+	GetSenderInfo(ctx context.Context, in *Code, opts ...grpc.CallOption) (*SenderInfo, error)
 }
 
 type ariseClient struct {
@@ -133,15 +135,43 @@ func (x *ariseDataRecieveClient) Recv() (*RecieveResponse, error) {
 	return m, nil
 }
 
+var ariseGetRecieverInfoStreamDesc = &grpc.StreamDesc{
+	StreamName: "GetRecieverInfo",
+}
+
+func (c *ariseClient) GetRecieverInfo(ctx context.Context, in *Code, opts ...grpc.CallOption) (*RecieverInfo, error) {
+	out := new(RecieverInfo)
+	err := c.cc.Invoke(ctx, "/arise.Arise/GetRecieverInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+var ariseGetSenderInfoStreamDesc = &grpc.StreamDesc{
+	StreamName: "GetSenderInfo",
+}
+
+func (c *ariseClient) GetSenderInfo(ctx context.Context, in *Code, opts ...grpc.CallOption) (*SenderInfo, error) {
+	out := new(SenderInfo)
+	err := c.cc.Invoke(ctx, "/arise.Arise/GetSenderInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AriseService is the service API for Arise service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterAriseService is called.  Any unassigned fields will result in the
 // handler for that method returning an Unimplemented error.
 type AriseService struct {
-	Sender      func(context.Context, *SenderRequest) (*SenderResponse, error)
-	Reciever    func(context.Context, *RecieverRequest) (*RecieverResponse, error)
-	DataSend    func(Arise_DataSendServer) error
-	DataRecieve func(*RecieverRequest, Arise_DataRecieveServer) error
+	Sender          func(context.Context, *SenderRequest) (*SenderResponse, error)
+	Reciever        func(context.Context, *RecieverRequest) (*RecieverResponse, error)
+	DataSend        func(Arise_DataSendServer) error
+	DataRecieve     func(*RecieverRequest, Arise_DataRecieveServer) error
+	GetRecieverInfo func(context.Context, *Code) (*RecieverInfo, error)
+	GetSenderInfo   func(context.Context, *Code) (*SenderInfo, error)
 }
 
 func (s *AriseService) sender(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -187,6 +217,40 @@ func (s *AriseService) dataRecieve(_ interface{}, stream grpc.ServerStream) erro
 		return err
 	}
 	return s.DataRecieve(m, &ariseDataRecieveServer{stream})
+}
+func (s *AriseService) getRecieverInfo(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Code)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.GetRecieverInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/arise.Arise/GetRecieverInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.GetRecieverInfo(ctx, req.(*Code))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+func (s *AriseService) getSenderInfo(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Code)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.GetSenderInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/arise.Arise/GetSenderInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.GetSenderInfo(ctx, req.(*Code))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 type Arise_DataSendServer interface {
@@ -247,6 +311,16 @@ func RegisterAriseService(s grpc.ServiceRegistrar, srv *AriseService) {
 			return status.Errorf(codes.Unimplemented, "method DataRecieve not implemented")
 		}
 	}
+	if srvCopy.GetRecieverInfo == nil {
+		srvCopy.GetRecieverInfo = func(context.Context, *Code) (*RecieverInfo, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method GetRecieverInfo not implemented")
+		}
+	}
+	if srvCopy.GetSenderInfo == nil {
+		srvCopy.GetSenderInfo = func(context.Context, *Code) (*SenderInfo, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method GetSenderInfo not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "arise.Arise",
 		Methods: []grpc.MethodDesc{
@@ -257,6 +331,14 @@ func RegisterAriseService(s grpc.ServiceRegistrar, srv *AriseService) {
 			{
 				MethodName: "Reciever",
 				Handler:    srvCopy.reciever,
+			},
+			{
+				MethodName: "GetRecieverInfo",
+				Handler:    srvCopy.getRecieverInfo,
+			},
+			{
+				MethodName: "GetSenderInfo",
+				Handler:    srvCopy.getSenderInfo,
 			},
 		},
 		Streams: []grpc.StreamDesc{

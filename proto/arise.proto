@@ -13,6 +13,13 @@ message RecieverRequest {
   string code = 1;
 }
 
+message SenderInfo {
+  string ip = 1;
+}
+
+message RecieverInfo {
+  string ip = 1;
+}
 
 message SenderResponse {
   string code = 1;
@@ -27,6 +34,9 @@ message SendResponse {
   string text = 1;
 }
 
+message Code {
+  string code = 1;
+}
 message Empty {
 
 }
@@ -45,4 +55,6 @@ service Arise {
   rpc Reciever(RecieverRequest) returns (RecieverResponse);
   rpc DataSend(stream Chunk) returns (SendResponse);
   rpc DataRecieve(RecieverRequest) returns (stream RecieveResponse);
+  rpc GetRecieverInfo(Code) returns (RecieverInfo);
+  rpc GetSenderInfo(Code) returns (SenderInfo);
 }
