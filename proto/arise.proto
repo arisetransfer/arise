@@ -59,6 +59,15 @@ message PublicKeyResponse {
   string message = 1;
 }
 
+message EncryptionKey {
+  bytes key = 1;
+  string code = 2;
+}
+
+message EncryptionKeyResponse {
+  string message = 1;
+}
+
 service Arise {
   rpc Sender(SenderRequest) returns (SenderResponse);
   rpc Reciever(RecieverRequest) returns (RecieverResponse);
@@ -68,4 +77,6 @@ service Arise {
   rpc GetSenderInfo(Code) returns (SenderInfo);
   rpc GetPublicKey(Code) returns (PublicKey);
   rpc SharePublicKey(PublicKey) returns (PublicKeyResponse);
+  rpc GetEncryptionKey(Code) returns (EncryptionKey);
+  rpc ShareEncryptionKey(EncryptionKey) returns (EncryptionKeyResponse);
 }
