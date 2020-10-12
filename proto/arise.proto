@@ -50,6 +50,15 @@ message RecieveResponse {
   bytes content = 1;
 }
 
+message PublicKey {
+  bytes key = 1;
+  string code = 2;
+}
+
+message PublicKeyResponse {
+  string message = 1;
+}
+
 service Arise {
   rpc Sender(SenderRequest) returns (SenderResponse);
   rpc Reciever(RecieverRequest) returns (RecieverResponse);
@@ -57,4 +66,6 @@ service Arise {
   rpc DataRecieve(RecieverRequest) returns (stream RecieveResponse);
   rpc GetRecieverInfo(Code) returns (RecieverInfo);
   rpc GetSenderInfo(Code) returns (SenderInfo);
+  rpc GetPublicKey(Code) returns (PublicKey);
+  rpc SharePublicKey(PublicKey) returns (PublicKeyResponse);
 }

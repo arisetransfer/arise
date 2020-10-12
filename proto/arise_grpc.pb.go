@@ -23,6 +23,8 @@ type AriseClient interface {
 	DataRecieve(ctx context.Context, in *RecieverRequest, opts ...grpc.CallOption) (Arise_DataRecieveClient, error)
 	GetRecieverInfo(ctx context.Context, in *Code, opts ...grpc.CallOption) (*RecieverInfo, error)
 	GetSenderInfo(ctx context.Context, in *Code, opts ...grpc.CallOption) (*SenderInfo, error)
+	GetPublicKey(ctx context.Context, in *Code, opts ...grpc.CallOption) (*PublicKey, error)
+	SharePublicKey(ctx context.Context, in *PublicKey, opts ...grpc.CallOption) (*PublicKeyResponse, error)
 }
 
 type ariseClient struct {
@@ -161,6 +163,32 @@ func (c *ariseClient) GetSenderInfo(ctx context.Context, in *Code, opts ...grpc.
 	return out, nil
 }
 
+var ariseGetPublicKeyStreamDesc = &grpc.StreamDesc{
+	StreamName: "GetPublicKey",
+}
+
+func (c *ariseClient) GetPublicKey(ctx context.Context, in *Code, opts ...grpc.CallOption) (*PublicKey, error) {
+	out := new(PublicKey)
+	err := c.cc.Invoke(ctx, "/arise.Arise/GetPublicKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+var ariseSharePublicKeyStreamDesc = &grpc.StreamDesc{
+	StreamName: "SharePublicKey",
+}
+
+func (c *ariseClient) SharePublicKey(ctx context.Context, in *PublicKey, opts ...grpc.CallOption) (*PublicKeyResponse, error) {
+	out := new(PublicKeyResponse)
+	err := c.cc.Invoke(ctx, "/arise.Arise/SharePublicKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AriseService is the service API for Arise service.
 // Fields should be assigned to their respective handler implementations only before
 // RegisterAriseService is called.  Any unassigned fields will result in the
@@ -172,6 +200,8 @@ type AriseService struct {
 	DataRecieve     func(*RecieverRequest, Arise_DataRecieveServer) error
 	GetRecieverInfo func(context.Context, *Code) (*RecieverInfo, error)
 	GetSenderInfo   func(context.Context, *Code) (*SenderInfo, error)
+	GetPublicKey    func(context.Context, *Code) (*PublicKey, error)
+	SharePublicKey  func(context.Context, *PublicKey) (*PublicKeyResponse, error)
 }
 
 func (s *AriseService) sender(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -252,6 +282,40 @@ func (s *AriseService) getSenderInfo(_ interface{}, ctx context.Context, dec fun
 	}
 	return interceptor(ctx, in, info, handler)
 }
+func (s *AriseService) getPublicKey(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Code)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.GetPublicKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/arise.Arise/GetPublicKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.GetPublicKey(ctx, req.(*Code))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+func (s *AriseService) sharePublicKey(_ interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublicKey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return s.SharePublicKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     s,
+		FullMethod: "/arise.Arise/SharePublicKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return s.SharePublicKey(ctx, req.(*PublicKey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
 
 type Arise_DataSendServer interface {
 	SendAndClose(*SendResponse) error
@@ -321,6 +385,16 @@ func RegisterAriseService(s grpc.ServiceRegistrar, srv *AriseService) {
 			return nil, status.Errorf(codes.Unimplemented, "method GetSenderInfo not implemented")
 		}
 	}
+	if srvCopy.GetPublicKey == nil {
+		srvCopy.GetPublicKey = func(context.Context, *Code) (*PublicKey, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method GetPublicKey not implemented")
+		}
+	}
+	if srvCopy.SharePublicKey == nil {
+		srvCopy.SharePublicKey = func(context.Context, *PublicKey) (*PublicKeyResponse, error) {
+			return nil, status.Errorf(codes.Unimplemented, "method SharePublicKey not implemented")
+		}
+	}
 	sd := grpc.ServiceDesc{
 		ServiceName: "arise.Arise",
 		Methods: []grpc.MethodDesc{
@@ -339,6 +413,14 @@ func RegisterAriseService(s grpc.ServiceRegistrar, srv *AriseService) {
 			{
 				MethodName: "GetSenderInfo",
 				Handler:    srvCopy.getSenderInfo,
+			},
+			{
+				MethodName: "GetPublicKey",
+				Handler:    srvCopy.getPublicKey,
+			},
+			{
+				MethodName: "SharePublicKey",
+				Handler:    srvCopy.sharePublicKey,
 			},
 		},
 		Streams: []grpc.StreamDesc{

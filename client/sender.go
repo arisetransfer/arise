@@ -7,6 +7,9 @@ import (
 	"io"
 	"log"
 	"os"
+	"encoding/gob"
+	"bytes"
+	"crypto/rsa"
 
 	"github.com/arisetransfer/arise/proto"
 	"google.golang.org/grpc"
@@ -23,7 +26,7 @@ func main() {
 	client := proto.NewAriseClient(conn)
 	file, err := os.Open(os.Args[1])
 	if err != nil {
-		log.Println("File Not Found!")
+		fmt.Println("File Not Found!")
 		return
 	}
 	defer file.Close()
@@ -44,6 +47,19 @@ func main() {
 		log.Printf("Error :%v", err)
 		return
 	}
+	publicKey,err := client.GetPublicKey(context.Background(),&proto.Code{Code:code.Code})
+	if err != nil {
+		log.Printf("Error :%v", err)
+		return
+	}
+	//fmt.Println(publicKey.Key)
+	dec := gob.NewDecoder(bytes.NewBuffer(publicKey.Key))
+	var decodedPublicKey rsa.PublicKey
+	err = dec.Decode(&decodedPublicKey)
+  if err != nil {
+    log.Println(err)
+  }
+	fmt.Println(decodedPublicKey)
 	buf := make([]byte, 1024)
 	reader := bufio.NewReader(file)
 	for {

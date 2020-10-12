@@ -7,6 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"crypto/rsa"
+	"crypto/rand"
+	"bytes"
+	"encoding/gob"
 
 	"github.com/arisetransfer/arise/proto"
 	"google.golang.org/grpc"
@@ -21,6 +25,23 @@ func main() {
 	}
 	defer conn.Close()
 	client := proto.NewAriseClient(conn)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		panic(err)
+	}
+	var key bytes.Buffer
+  enc := gob.NewEncoder(&key)
+  err = enc.Encode(privateKey.PublicKey)
+  if err != nil {
+    panic(err)
+  }
+	fmt.Println(privateKey.PublicKey)
+	ack,err := client.SharePublicKey(context.Background(),&proto.PublicKey{Key:key.Bytes(),Code:os.Args[1]})
+	if err != nil {
+		log.Fatalf("Error:- %v", err)
+		return
+	}
+	fmt.Println(ack.Message)
 	code, err := client.Reciever(context.Background(), &proto.RecieverRequest{Code: os.Args[1]})
 	if err != nil {
 		log.Fatalf("Error:- %v", err)

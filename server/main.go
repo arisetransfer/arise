@@ -22,6 +22,7 @@ var (
   done = make(map[string]chan bool)
 	rip = make(map[string]proto.RecieverInfo)
 	sip = make(map[string]proto.SenderInfo)
+	recieverPublicKey = make(map[string][]byte)
 )
 
 func main() {
@@ -41,6 +42,8 @@ func main() {
 		DataRecieve: server.DataRecieve,
 		GetRecieverInfo: server.GetRecieverInfo,
 		GetSenderInfo: server.GetSenderInfo,
+		GetPublicKey: server.GetPublicKey,
+		SharePublicKey: server.SharePublicKey,
 	})
 
 	fmt.Println("gRPC Server Started")
@@ -48,7 +51,6 @@ func main() {
 }
 
 func (s *Server) Sender(ctx context.Context, request *proto.SenderRequest) (*proto.SenderResponse, error) {
-
 	for {
 		code := utils.Dice(4)
 		if _, ok := connections[code]; ok {
@@ -120,16 +122,34 @@ func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_D
 
 func (s *Server) GetRecieverInfo(ctx context.Context,request *proto.Code) (*proto.RecieverInfo,error) {
 	for {
-		if(rip[request.Code].Ip!=""){
-			return &proto.RecieverInfo{Ip:rip[request.Code].Ip},nil
+		if val, ok := rip[request.Code]; ok {
+			return &proto.RecieverInfo{Ip:val.Ip},nil
 		}
 	}
 }
 
 func (s *Server) GetSenderInfo(ctx context.Context,request *proto.Code) (*proto.SenderInfo,error) {
 	for {
-		if(sip[request.Code].Ip!=""){
-			return &proto.SenderInfo{Ip:sip[request.Code].Ip},nil
+		if val, ok := sip[request.Code]; ok {
+			return &proto.SenderInfo{Ip:val.Ip},nil
 		}
 	}
+}
+
+func (s *Server) GetPublicKey(ctx context.Context,request *proto.Code) (*proto.PublicKey,error)  {
+	return &proto.PublicKey{Key:recieverPublicKey[request.Code]},nil
+}
+
+func (s *Server) SharePublicKey(ctx context.Context,request *proto.PublicKey) (*proto.PublicKeyResponse,error)  {
+	/*
+	dec := gob.NewDecoder(bytes.NewBuffer(request.Key))
+	var DecodedP rsa.PublicKey
+	err := dec.Decode(&DecodedP)
+  if err != nil {
+    log.Println(err)
+  }
+	*/
+	recieverPublicKey[request.Code] = request.Key
+	//fmt.Println(recieverPublicKey)
+	return &proto.PublicKeyResponse{Message:"PublicKey Recieved!"},nil
 }
