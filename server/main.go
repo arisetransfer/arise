@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
   "io"
 
 	"github.com/arisetransfer/arise/proto"
@@ -23,6 +24,7 @@ var (
 	rip = make(map[string]proto.RecieverInfo)
 	sip = make(map[string]proto.SenderInfo)
 	recieverPublicKey = make(map[string][]byte)
+	senderEncryptionKey = make(map[string][]byte)
 )
 
 func main() {
@@ -44,6 +46,8 @@ func main() {
 		GetSenderInfo: server.GetSenderInfo,
 		GetPublicKey: server.GetPublicKey,
 		SharePublicKey: server.SharePublicKey,
+		GetEncryptionKey: server.GetEncryptionKey,
+		ShareEncryptionKey: server.ShareEncryptionKey,
 	})
 
 	fmt.Println("gRPC Server Started")
@@ -105,7 +109,10 @@ func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_D
   defer delete(contents,request.Code)
 	defer delete(rip,request.Code)
 	defer delete(sip,request.Code)
+	defer delete(recieverPublicKey,request.Code)
+	defer delete(senderEncryptionKey,request.Code)
 	defer delete(connections, request.Code)
+
   Recieve:
   for {
     select {
@@ -122,6 +129,7 @@ func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_D
 
 func (s *Server) GetRecieverInfo(ctx context.Context,request *proto.Code) (*proto.RecieverInfo,error) {
 	for {
+		time.Sleep(1*time.Second)
 		if val, ok := rip[request.Code]; ok {
 			return &proto.RecieverInfo{Ip:val.Ip},nil
 		}
@@ -130,6 +138,7 @@ func (s *Server) GetRecieverInfo(ctx context.Context,request *proto.Code) (*prot
 
 func (s *Server) GetSenderInfo(ctx context.Context,request *proto.Code) (*proto.SenderInfo,error) {
 	for {
+		time.Sleep(1*time.Second)
 		if val, ok := sip[request.Code]; ok {
 			return &proto.SenderInfo{Ip:val.Ip},nil
 		}
@@ -141,15 +150,20 @@ func (s *Server) GetPublicKey(ctx context.Context,request *proto.Code) (*proto.P
 }
 
 func (s *Server) SharePublicKey(ctx context.Context,request *proto.PublicKey) (*proto.PublicKeyResponse,error)  {
-	/*
-	dec := gob.NewDecoder(bytes.NewBuffer(request.Key))
-	var DecodedP rsa.PublicKey
-	err := dec.Decode(&DecodedP)
-  if err != nil {
-    log.Println(err)
-  }
-	*/
 	recieverPublicKey[request.Code] = request.Key
-	//fmt.Println(recieverPublicKey)
 	return &proto.PublicKeyResponse{Message:"PublicKey Recieved!"},nil
+}
+
+func (s *Server) ShareEncryptionKey(ctx context.Context,request *proto.EncryptionKey) (*proto.EncryptionKeyResponse,error)  {
+	senderEncryptionKey[request.Code] = request.Key
+	return &proto.EncryptionKeyResponse{Message:"EncryptionKey Recieved!"},nil
+}
+
+func (s *Server) GetEncryptionKey(ctx context.Context,request *proto.Code) (*proto.EncryptionKey,error) {
+	for {
+		time.Sleep(1*time.Second)
+		if val ,ok := senderEncryptionKey[request.Code]; ok {
+			return &proto.EncryptionKey{Key:val},nil
+		}
+	}
 }
