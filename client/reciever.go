@@ -11,6 +11,7 @@ import (
 	"crypto/rand"
 	"bytes"
 	"encoding/gob"
+	"crypto"
 
 	"github.com/arisetransfer/arise/proto"
 	"google.golang.org/grpc"
@@ -35,7 +36,6 @@ func main() {
   if err != nil {
     panic(err)
   }
-	fmt.Println(privateKey.PublicKey)
 	ack,err := client.SharePublicKey(context.Background(),&proto.PublicKey{Key:key.Bytes(),Code:os.Args[1]})
 	if err != nil {
 		log.Fatalf("Error:- %v", err)
@@ -50,9 +50,17 @@ func main() {
 	fmt.Println("FileName: ", code.Name, " Hash: ", code.Hash)
 	senderInfo,err := client.GetSenderInfo(context.Background(),&proto.Code{Code:os.Args[1]})
 	if err != nil {
-		log.Printf("Errror : %v", err)
+		log.Printf("Error : %v", err)
 	}
 	fmt.Println("Receiving Data from ",senderInfo.Ip)
+	aesEncryptionKey,err := client.GetEncryptionKey(context.Background(),&proto.Code{Code:os.Args[1]})
+	if err != nil {
+		log.Printf("Error : %v", err)
+	}
+	decryptedEncryptionKey, err := privateKey.Decrypt(nil, aesEncryptionKey.Key, &rsa.OAEPOptions{Hash: crypto.SHA256})
+  if err != nil {
+	   panic(err)
+   }
 	recv := &proto.RecieverRequest{Code: os.Args[1]}
 	stream, err := client.DataRecieve(context.Background(), recv)
 	if err != nil {
@@ -67,7 +75,14 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		fullfile = append(fullfile, strm.Content...)
+		var key [32]byte
+		copy(key[:], decryptedEncryptionKey)
+		decryptedContent,err := utils.Decrypt(strm.Content,&key)
+		if err != nil {
+			log.Printf("Error : %v", err)
+			return
+		}
+		fullfile = append(fullfile, decryptedContent...)
 	}
 	err = ioutil.WriteFile(code.Name, fullfile, 0644)
 	if err != nil {
