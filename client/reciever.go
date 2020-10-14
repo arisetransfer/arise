@@ -18,7 +18,8 @@ import (
 )
 
 func Reciever(code string) {
-	conn, err := grpc.Dial("127.0.0.1:6969", grpc.WithInsecure())
+	addr,port := utils.GetIPAddrAndPort()
+	conn, err := grpc.Dial(addr+":"+port, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Error:- ", err)
 		return
