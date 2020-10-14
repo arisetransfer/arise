@@ -98,7 +98,7 @@ func (s *Server) Reciever(ctx context.Context, request *proto.RecieverRequest) (
 		recieverIp,_ := peer.FromContext(ctx)
 		rip[request.Code] = proto.RecieverInfo{Ip:recieverIp.Addr.String()}
 		log.Println("Sending to ",recieverIp.Addr.String())
-		return &proto.RecieverResponse{Name: connections[request.Code].Name, Hash: connections[request.Code].Hash}, nil
+		return &proto.RecieverResponse{Name: connections[request.Code].Name, Hash: connections[request.Code].Hash,Size: connections[request.Code].Size}, nil
 	}
 	return &proto.RecieverResponse{Name: "", Hash: ""}, errors.New("The Code Is Invalid")
 }

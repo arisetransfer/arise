@@ -36,7 +36,7 @@ func Sender(filename string) {
 	defer file.Close()
 	fname, _ := os.Stat(filename)
 	bar := progressbar.Default(fname.Size())
-	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(filename)})
+	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(filename),Size: fname.Size()})
 	if err != nil {
 		log.Fatalf("Error:- ", err)
 		return

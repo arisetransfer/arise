@@ -15,6 +15,7 @@ import (
 	"github.com/arisetransfer/arise/proto"
 	"google.golang.org/grpc"
 	"github.com/arisetransfer/arise/utils"
+	"github.com/schollz/progressbar/v3"
 )
 
 func Reciever(code string) {
@@ -41,7 +42,8 @@ func Reciever(code string) {
 		log.Fatalf("Error:- %v", err)
 		return
 	}
-	fmt.Println("FileName: ", file.Name, " Hash: ", file.Hash)
+	fmt.Println("FileName: ", file.Name, " Hash: ", file.Hash," Size: ",file.Size)
+	bar := progressbar.Default(file.Size)
 	ack,err := client.SharePublicKey(context.Background(),&proto.PublicKey{Key:key.Bytes(),Code:code})
 	if err != nil {
 		log.Fatalf("Error:- %v", err)
@@ -67,6 +69,8 @@ func Reciever(code string) {
 		panic(err)
 	}
 	var fullfile []byte
+	var finalKey [32]byte
+	copy(finalKey[:], decryptedEncryptionKey)
 	for {
 		strm, err := stream.Recv()
 		if err == io.EOF {
@@ -75,9 +79,8 @@ func Reciever(code string) {
 		if err != nil {
 			panic(err)
 		}
-		var key [32]byte
-		copy(key[:], decryptedEncryptionKey)
-		decryptedContent,err := utils.Decrypt(strm.Content,&key)
+		bar.Add(len(strm.Content))
+		decryptedContent,err := utils.Decrypt(strm.Content,&finalKey)
 		if err != nil {
 			log.Printf("Error : %v", err)
 			return
