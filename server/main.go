@@ -21,6 +21,7 @@ var (
 	connections = make(map[string]proto.SenderRequest)
   contents = make(map[string](chan []byte))
   done = make(map[string]chan bool)
+	dataSent = make(map[string]chan bool)
 	rip = make(map[string]proto.RecieverInfo)
 	sip = make(map[string]proto.SenderInfo)
 	recieverPublicKey = make(map[string][]byte)
@@ -62,8 +63,27 @@ func (s *Server) Sender(ctx context.Context, request *proto.SenderRequest) (*pro
 			connections[code] = *request
       contents[code] = make(chan []byte)
       done[code] = make(chan bool, 1)
+			dataSent[code] = make(chan bool,1)
 			senderIp,_ := peer.FromContext(ctx)
 			sip[code] = proto.SenderInfo{Ip:senderIp.Addr.String()}
+			go func() {
+					//Deleting all the existing data upon Data Send or timeout!
+					select{
+					case <-done[code]:
+						break
+					case <-time.After(10*time.Minute):
+						break
+					}
+					delete(contents,code)
+					delete(rip,code)
+					delete(sip,code)
+					delete(recieverPublicKey,code)
+					delete(senderEncryptionKey,code)
+					delete(connections, code)
+					delete(recieverPublicKey,code)
+					delete(senderEncryptionKey,code)
+					delete(dataSent,code)
+			}()
 			log.Println("Recieving from ",senderIp.Addr.String())
 			return &proto.SenderResponse{Code: code}, nil
 		}
@@ -92,12 +112,14 @@ func (s *Server) DataSend(stream proto.Arise_DataSendServer) error {
       code = data.Code
     }
     if err == io.EOF {
+			dataSent[code]<-true
       done[code]<-true
       return stream.SendAndClose(&proto.SendResponse{Text:"Data Sent Successfully!"})
     }
     if err != nil {
       log.Println("Error : ",err)
-			done[code]<-true
+			dataSent[code]<-true
+      done[code]<-true
 			return stream.SendAndClose(&proto.SendResponse{Text:"Data Not Recieved!"})
     }
     contents[data.Code]<-data.Content
@@ -106,13 +128,6 @@ func (s *Server) DataSend(stream proto.Arise_DataSendServer) error {
 
 
 func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_DataRecieveServer) error {
-  defer delete(contents,request.Code)
-	defer delete(rip,request.Code)
-	defer delete(sip,request.Code)
-	defer delete(recieverPublicKey,request.Code)
-	defer delete(senderEncryptionKey,request.Code)
-	defer delete(connections, request.Code)
-
   Recieve:
   for {
     select {
@@ -120,7 +135,7 @@ func (s *Server) DataRecieve(request *proto.RecieverRequest,stream proto.Arise_D
       if err := stream.Send(&proto.RecieveResponse{Content:content}); err != nil {
         return err
       }
-    case <- done[request.Code]:
+    case <- dataSent[request.Code]:
       break Recieve
     }
   }
