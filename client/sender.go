@@ -16,6 +16,7 @@ import (
 	"github.com/arisetransfer/arise/proto"
 	"google.golang.org/grpc"
 	"github.com/arisetransfer/arise/utils"
+	"github.com/schollz/progressbar/v3"
 )
 
 func Sender(filename string) {
@@ -34,6 +35,7 @@ func Sender(filename string) {
 	}
 	defer file.Close()
 	fname, _ := os.Stat(filename)
+	bar := progressbar.Default(fname.Size())
 	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(filename)})
 	if err != nil {
 		log.Fatalf("Error:- ", err)
@@ -89,6 +91,7 @@ func Sender(filename string) {
 			log.Println("Error: ", err)
 			return
 		}
+		bar.Add(n)
 		encryptedContent,err := utils.Encrypt([]byte(buf[0:n]),aesEncryptionKey)
 		if err != nil {
 			log.Println("Error: ", err)
