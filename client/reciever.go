@@ -79,8 +79,8 @@ func Reciever(code string) {
 		if err != nil {
 			panic(err)
 		}
-		bar.Add(len(strm.Content))
 		decryptedContent,err := utils.Decrypt(strm.Content,&finalKey)
+		bar.Add(len(decryptedContent))
 		if err != nil {
 			log.Printf("Error : %v", err)
 			return
