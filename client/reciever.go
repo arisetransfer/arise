@@ -36,18 +36,18 @@ func main() {
   if err != nil {
     panic(err)
   }
-	ack,err := client.SharePublicKey(context.Background(),&proto.PublicKey{Key:key.Bytes(),Code:os.Args[1]})
-	if err != nil {
-		log.Fatalf("Error:- %v", err)
-		return
-	}
-	fmt.Println(ack.Message)
 	code, err := client.Reciever(context.Background(), &proto.RecieverRequest{Code: os.Args[1]})
 	if err != nil {
 		log.Fatalf("Error:- %v", err)
 		return
 	}
 	fmt.Println("FileName: ", code.Name, " Hash: ", code.Hash)
+	ack,err := client.SharePublicKey(context.Background(),&proto.PublicKey{Key:key.Bytes(),Code:os.Args[1]})
+	if err != nil {
+		log.Fatalf("Error:- %v", err)
+		return
+	}
+	fmt.Println(ack.Message)
 	senderInfo,err := client.GetSenderInfo(context.Background(),&proto.Code{Code:os.Args[1]})
 	if err != nil {
 		log.Printf("Error : %v", err)
