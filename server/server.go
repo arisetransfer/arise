@@ -28,7 +28,7 @@ var (
 	senderEncryptionKey = make(map[string][]byte)
 )
 
-func main() {
+func StartRelay() {
 	lis, err := net.Listen("tcp", ":6969")
 	if err != nil {
 		log.Fatal("Error: ", err)

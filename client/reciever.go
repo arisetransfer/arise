@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"crypto/rsa"
 	"crypto/rand"
 	"bytes"
@@ -18,7 +17,7 @@ import (
 	"github.com/arisetransfer/arise/utils"
 )
 
-func main() {
+func Reciever(code string) {
 	conn, err := grpc.Dial("127.0.0.1:6969", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Error:- ", err)
@@ -36,24 +35,24 @@ func main() {
   if err != nil {
     panic(err)
   }
-	code, err := client.Reciever(context.Background(), &proto.RecieverRequest{Code: os.Args[1]})
+	file, err := client.Reciever(context.Background(), &proto.RecieverRequest{Code: code})
 	if err != nil {
 		log.Fatalf("Error:- %v", err)
 		return
 	}
-	fmt.Println("FileName: ", code.Name, " Hash: ", code.Hash)
-	ack,err := client.SharePublicKey(context.Background(),&proto.PublicKey{Key:key.Bytes(),Code:os.Args[1]})
+	fmt.Println("FileName: ", file.Name, " Hash: ", file.Hash)
+	ack,err := client.SharePublicKey(context.Background(),&proto.PublicKey{Key:key.Bytes(),Code:code})
 	if err != nil {
 		log.Fatalf("Error:- %v", err)
 		return
 	}
 	fmt.Println(ack.Message)
-	senderInfo,err := client.GetSenderInfo(context.Background(),&proto.Code{Code:os.Args[1]})
+	senderInfo,err := client.GetSenderInfo(context.Background(),&proto.Code{Code:code})
 	if err != nil {
 		log.Printf("Error : %v", err)
 	}
 	fmt.Println("Receiving Data from ",senderInfo.Ip)
-	aesEncryptionKey,err := client.GetEncryptionKey(context.Background(),&proto.Code{Code:os.Args[1]})
+	aesEncryptionKey,err := client.GetEncryptionKey(context.Background(),&proto.Code{Code:code})
 	if err != nil {
 		log.Printf("Error : %v", err)
 	}
@@ -61,7 +60,7 @@ func main() {
   if err != nil {
 	   panic(err)
    }
-	recv := &proto.RecieverRequest{Code: os.Args[1]}
+	recv := &proto.RecieverRequest{Code: code}
 	stream, err := client.DataRecieve(context.Background(), recv)
 	if err != nil {
 		panic(err)
@@ -84,12 +83,12 @@ func main() {
 		}
 		fullfile = append(fullfile, decryptedContent...)
 	}
-	err = ioutil.WriteFile(code.Name, fullfile, 0644)
+	err = ioutil.WriteFile(file.Name, fullfile, 0644)
 	if err != nil {
 		log.Println("Error: ", err)
 		return
 	}
-	if utils.FileHash(code.Name) == code.Hash {
+	if utils.FileHash(file.Name) == file.Hash {
 		fmt.Println("File Hash Verified!")
 		return
 	} else {

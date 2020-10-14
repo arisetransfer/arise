@@ -18,7 +18,7 @@ import (
 	"github.com/arisetransfer/arise/utils"
 )
 
-func main() {
+func Sender(filename string) {
 	conn, err := grpc.Dial("127.0.0.1:6969", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Error:- ", err)
@@ -26,14 +26,14 @@ func main() {
 	}
 	defer conn.Close()
 	client := proto.NewAriseClient(conn)
-	file, err := os.Open(os.Args[1])
+	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("File Not Found!")
 		return
 	}
 	defer file.Close()
-	fname, _ := os.Stat(os.Args[1])
-	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(os.Args[1])})
+	fname, _ := os.Stat(filename)
+	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(filename)})
 	if err != nil {
 		log.Fatalf("Error:- ", err)
 		return
