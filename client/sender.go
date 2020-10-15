@@ -2,25 +2,25 @@ package client
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"encoding/gob"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"encoding/gob"
-	"bytes"
-	"crypto/rsa"
-	"crypto/rand"
-	"crypto/sha256"
 
 	"github.com/arisetransfer/arise/proto"
-	"google.golang.org/grpc"
 	"github.com/arisetransfer/arise/utils"
 	"github.com/schollz/progressbar/v3"
+	"google.golang.org/grpc"
 )
 
 func Sender(filename string) {
-	addr,port := utils.GetIPAddrAndPort()
+	addr, port := utils.GetIPAddrAndPort()
 	conn, err := grpc.Dial(addr+":"+port, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Error:- ", err)
@@ -36,23 +36,23 @@ func Sender(filename string) {
 	defer file.Close()
 	fname, _ := os.Stat(filename)
 	bar := progressbar.Default(fname.Size())
-	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(filename),Size: fname.Size()})
+	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(filename), Size: fname.Size()})
 	if err != nil {
 		log.Fatalf("Error:- ", err)
 		return
 	}
 	fmt.Println("Code: ", code.Code)
-	recieverInfo,err := client.GetRecieverInfo(context.Background(),&proto.Code{Code:code.Code})
+	recieverInfo, err := client.GetRecieverInfo(context.Background(), &proto.Code{Code: code.Code})
 	if err != nil {
 		log.Printf("Errror : %v", err)
 	}
-	fmt.Println("Sending Data to ",recieverInfo.Ip)
+	fmt.Println("Sending Data to ", recieverInfo.Ip)
 	stream, err := client.DataSend(context.Background())
 	if err != nil {
 		log.Printf("Error :%v", err)
 		return
 	}
-	publicKey,err := client.GetPublicKey(context.Background(),&proto.Code{Code:code.Code})
+	publicKey, err := client.GetPublicKey(context.Background(), &proto.Code{Code: code.Code})
 	if err != nil {
 		log.Printf("Error :%v", err)
 		return
@@ -61,9 +61,9 @@ func Sender(filename string) {
 	dec := gob.NewDecoder(bytes.NewBuffer(publicKey.Key))
 	var decodedPublicKey rsa.PublicKey
 	err = dec.Decode(&decodedPublicKey)
-  if err != nil {
-    log.Println(err)
-  }
+	if err != nil {
+		log.Println(err)
+	}
 	aesEncryptionKey := utils.NewEncryptionKey()
 	encryptedKey, err := rsa.EncryptOAEP(
 		sha256.New(),
@@ -74,7 +74,7 @@ func Sender(filename string) {
 	if err != nil {
 		panic(err)
 	}
-	resp,err := client.ShareEncryptionKey(context.Background(),&proto.EncryptionKey{Key:encryptedKey,Code:code.Code})
+	resp, err := client.ShareEncryptionKey(context.Background(), &proto.EncryptionKey{Key: encryptedKey, Code: code.Code})
 	if err != nil {
 		log.Printf("Error :%v", err)
 		return
@@ -92,12 +92,12 @@ func Sender(filename string) {
 			return
 		}
 		bar.Add(n)
-		encryptedContent,err := utils.Encrypt([]byte(buf[0:n]),aesEncryptionKey)
+		encryptedContent, err := utils.Encrypt([]byte(buf[0:n]), aesEncryptionKey)
 		if err != nil {
 			log.Println("Error: ", err)
 			return
 		}
-		if err := stream.Send(&proto.Chunk{Code: code.Code, Content:encryptedContent}); err != nil {
+		if err := stream.Send(&proto.Chunk{Code: code.Code, Content: encryptedContent}); err != nil {
 			log.Fatalf("%v", err)
 		}
 	}

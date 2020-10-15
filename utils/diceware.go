@@ -1,10 +1,10 @@
 package utils
 
 import (
-  "log"
-  "strings"
-  
-  "github.com/sethvargo/go-diceware/diceware"
+	"log"
+	"strings"
+
+	"github.com/sethvargo/go-diceware/diceware"
 )
 
 func Dice(i int) string {
