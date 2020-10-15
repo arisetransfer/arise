@@ -9,7 +9,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"log"
 
 	"github.com/arisetransfer/arise/proto"
@@ -43,6 +43,10 @@ func Reciever(code string) {
 		return
 	}
 	fmt.Println("FileName: ", file.Name, " Hash: ", file.Hash, " Size: ", file.Size)
+	if utils.FileExists(file.Name) {
+		fmt.Println("File Exists!")
+		return
+	}
 	bar := progressbar.Default(file.Size)
 	ack, err := client.SharePublicKey(context.Background(), &proto.PublicKey{Key: key.Bytes(), Code: code})
 	if err != nil {
@@ -68,9 +72,13 @@ func Reciever(code string) {
 	if err != nil {
 		panic(err)
 	}
-	var fullfile []byte
 	var finalKey [32]byte
 	copy(finalKey[:], decryptedEncryptionKey)
+	f, err := os.OpenFile(file.Name, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
 	for {
 		strm, err := stream.Recv()
 		if err == io.EOF {
@@ -85,12 +93,9 @@ func Reciever(code string) {
 			log.Printf("Error : %v", err)
 			return
 		}
-		fullfile = append(fullfile, decryptedContent...)
-	}
-	err = ioutil.WriteFile(file.Name, fullfile, 0644)
-	if err != nil {
-		log.Println("Error: ", err)
-		return
+		if _, err = f.Write(decryptedContent); err != nil {
+			panic(err)
+		}
 	}
 	if utils.FileHash(file.Name) == file.Hash {
 		fmt.Println("File Hash Verified!")
