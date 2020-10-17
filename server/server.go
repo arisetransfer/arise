@@ -159,7 +159,12 @@ func (s *Server) GetSenderInfo(ctx context.Context, request *proto.Code) (*proto
 }
 
 func (s *Server) GetPublicKey(ctx context.Context, request *proto.Code) (*proto.PublicKey, error) {
-	return &proto.PublicKey{Key: recieverPublicKey[request.Code]}, nil
+	for {
+		time.Sleep(1*time.Second)
+		if val,ok := recieverPublicKey[request.Code];ok{
+			return &proto.PublicKey{Key: val},nil
+		}
+	}
 }
 
 func (s *Server) SharePublicKey(ctx context.Context, request *proto.PublicKey) (*proto.PublicKeyResponse, error) {
