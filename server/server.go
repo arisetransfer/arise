@@ -160,9 +160,9 @@ func (s *Server) GetSenderInfo(ctx context.Context, request *proto.Code) (*proto
 
 func (s *Server) GetPublicKey(ctx context.Context, request *proto.Code) (*proto.PublicKey, error) {
 	for {
-		time.Sleep(1*time.Second)
-		if val,ok := recieverPublicKey[request.Code];ok{
-			return &proto.PublicKey{Key: val},nil
+		time.Sleep(1 * time.Second)
+		if val, ok := recieverPublicKey[request.Code]; ok {
+			return &proto.PublicKey{Key: val}, nil
 		}
 	}
 }

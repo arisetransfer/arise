@@ -9,8 +9,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
-	"os"
 	"log"
+	"os"
 
 	"github.com/arisetransfer/arise/proto"
 	"github.com/arisetransfer/arise/utils"
