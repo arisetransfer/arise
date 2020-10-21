@@ -23,7 +23,7 @@ func Sender(filename string) {
 	addr, port := utils.GetIPAddrAndPort()
 	conn, err := grpc.Dial(addr+":"+port, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("Error:- ", err)
+		log.Fatalf("Error:- %v", err)
 		return
 	}
 	defer conn.Close()
@@ -35,10 +35,10 @@ func Sender(filename string) {
 	}
 	defer file.Close()
 	fname, _ := os.Stat(filename)
-	bar := progressbar.Default(fname.Size())
+	bar := progressbar.DefaultBytes(fname.Size())
 	code, err := client.Sender(context.Background(), &proto.SenderRequest{Name: fname.Name(), Hash: utils.FileHash(filename), Size: fname.Size()})
 	if err != nil {
-		log.Fatalf("Error:- ", err)
+		log.Fatalf("Error:- %v", err)
 		return
 	}
 	fmt.Printf("On the other device type \n\n")

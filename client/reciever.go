@@ -22,7 +22,7 @@ func Reciever(code string) {
 	addr, port := utils.GetIPAddrAndPort()
 	conn, err := grpc.Dial(addr+":"+port, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("Error:- ", err)
+		log.Fatalf("Error:- %v", err)
 		return
 	}
 	defer conn.Close()
@@ -42,12 +42,12 @@ func Reciever(code string) {
 		log.Fatalf("Error:- %v", err)
 		return
 	}
-	fmt.Println("FileName: ", file.Name, " Hash: ", file.Hash, " Size: ", file.Size)
+	fmt.Println("FileName: ", file.Name, " Hash: ", file.Hash, " Size: ", utils.ByteCountDecimal(file.Size))
 	if utils.FileExists(file.Name) {
 		fmt.Println("File Exists!")
 		return
 	}
-	bar := progressbar.Default(file.Size)
+	bar := progressbar.DefaultBytes(file.Size)
 	ack, err := client.SharePublicKey(context.Background(), &proto.PublicKey{Key: key.Bytes(), Code: code})
 	if err != nil {
 		log.Fatalf("Error:- %v", err)
