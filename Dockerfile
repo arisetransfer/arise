@@ -6,15 +6,13 @@ WORKDIR go/src/arise
 
 COPY . .
 
-WORKDIR server
-
 RUN go build \
-    && mv server /go/bin
+    && mv arise /go/bin
 
 
 #####
 FROM alpine:3.6
 
-COPY --from=builder /go/bin/server /usr/local/bin
+COPY --from=builder /go/bin/arise /usr/local/bin
 
-ENTRYPOINT ["server"]
+ENTRYPOINT ["arise", "relay"]
