@@ -9,19 +9,19 @@ import (
 	"os"
 )
 
-func FileHash(name string) string {
+func FileHash(name string) (hash string) {
 	fmt.Println("Calculating sha256 Hash")
 	f, err := os.Open(name)
 	if err != nil {
 		log.Println("File Not Found!")
-		return ""
+		return
 	}
 	defer f.Close()
 	h := sha256.New()
 	if _, err := io.Copy(h, f); err != nil {
 		log.Fatal(err)
-		return ""
+		return
 	}
-	hash := hex.EncodeToString(h.Sum(nil))
-	return hash
+	hash = hex.EncodeToString(h.Sum(nil))
+	return
 }
