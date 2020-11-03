@@ -42,7 +42,7 @@ func Sender(filename string) {
 		return
 	}
 	fmt.Printf("On the other device type \n\n")
-	fmt.Println("arise recieve", code.Code)
+	fmt.Println("arise receive", code.Code)
 	recieverInfo, err := client.GetRecieverInfo(context.Background(), &proto.Code{Code: code.Code})
 	if err != nil {
 		log.Printf("Errror : %v", err)
