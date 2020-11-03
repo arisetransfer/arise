@@ -17,7 +17,8 @@ Create the config file
 mkdir -p $HOME/.arise/ && touch $HOME/.arise/config.toml
 ```
 and add IP and Port of the Server
-```bash
+Example `config.toml`
+```toml
 # Configuration file for arise relay and port
 
 ip = "127.0.0.1"
