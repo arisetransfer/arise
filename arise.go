@@ -15,7 +15,7 @@ func main() {
 		var codeOrFile = os.Args[2]
 		if instr == "send" {
 			client.Sender(codeOrFile)
-		} else if instr == "recieve" {
+		} else if instr == "receive" {
 			client.Reciever(codeOrFile)
 		}
 	}
