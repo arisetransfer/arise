@@ -51,7 +51,7 @@ func StartRelay(port string) {
 		ShareEncryptionKey: server.ShareEncryptionKey,
 	})
 
-	fmt.Println("gRPC Server Started on Port :"+port)
+	fmt.Println("gRPC Server Started on Port :" + port)
 	grpcServer.Serve(lis)
 }
 
