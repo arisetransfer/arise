@@ -28,8 +28,8 @@ var (
 	senderEncryptionKey = make(map[string][]byte)
 )
 
-func StartRelay() {
-	lis, err := net.Listen("tcp", ":6969")
+func StartRelay(port string) {
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatal("Error: ", err)
 	}
@@ -51,7 +51,7 @@ func StartRelay() {
 		ShareEncryptionKey: server.ShareEncryptionKey,
 	})
 
-	fmt.Println("gRPC Server Started")
+	fmt.Println("gRPC Server Started on Port :"+port)
 	grpcServer.Serve(lis)
 }
 
