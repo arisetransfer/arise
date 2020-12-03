@@ -1,36 +1,36 @@
 package main
 
 import (
-	"os"
 	"log"
+	"os"
 
-	"github.com/urfave/cli/v2"
 	"github.com/arisetransfer/arise/client"
 	"github.com/arisetransfer/arise/server"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
 	app := &cli.App{
-		Name: "arise",
+		Name:  "arise",
 		Usage: "Transfer file between two devices",
 	}
 	app.Commands = []*cli.Command{
 		{
-			Name: "send",
+			Name:      "send",
 			ArgsUsage: "[filename]",
-			Usage: "Send the file over relay",
-			HelpName: "arise send",
-			Action: func (c *cli.Context) error {
+			Usage:     "Send the file over relay",
+			HelpName:  "arise send",
+			Action: func(c *cli.Context) error {
 				client.Sender(c.Args().Get(0))
 				return nil
 			},
 		},
 		{
-			Name: "relay",
+			Name:      "relay",
 			ArgsUsage: "[Port]",
-			Usage: "Start an arise relay on port default(6969)",
-			Action: func (c *cli.Context) error {
-				if c.Args().Get(0)=="" {
+			Usage:     "Start an arise relay on port default(6969)",
+			Action: func(c *cli.Context) error {
+				if c.Args().Get(0) == "" {
 					server.StartRelay("6969")
 					return nil
 				}
@@ -39,11 +39,11 @@ func main() {
 			},
 		},
 		{
-			Name: "receive",
+			Name:      "receive",
 			ArgsUsage: "[unique_code]",
-			Usage: "Receive file using the unique code",
-			Action: func (c *cli.Context) error {
-				if c.Args().Get(0)=="" {
+			Usage:     "Receive file using the unique code",
+			Action: func(c *cli.Context) error {
+				if c.Args().Get(0) == "" {
 					cli.ShowAppHelp(c)
 					return nil
 				}
@@ -53,7 +53,7 @@ func main() {
 		},
 	}
 	err := app.Run(os.Args)
-  if err != nil {
-    log.Fatal(err)
-  }
+	if err != nil {
+		log.Fatal(err)
+	}
 }
