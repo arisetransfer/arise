@@ -52,5 +52,23 @@ arise relay
 ```
 This will listen on port 6969
 
+### Help
+```bash
+NAME:
+   arise - Transfer file between two devices
+
+USAGE:
+   arise [global options] command [command options] [arguments...]
+
+COMMANDS:
+   send     Send the file over relay
+   relay    Start an arise relay on port default(6969)
+   receive  Receive file using the unique code
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h  show help (default: false)
+```
+
 ## License
 MIT
