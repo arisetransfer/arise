@@ -7,7 +7,7 @@ Transfer file between two devices using gRPC streams.
 ## Installation
 Using Go
 ```bash
-go get -u github.com/arisetransfer/arise
+go install github.com/arisetransfer/arise@latest
 ```
 Or Download the binary from releases and add to your path
 
